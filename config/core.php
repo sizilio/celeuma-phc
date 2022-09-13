@@ -11,6 +11,7 @@ require_once API_ROOT . '/src/objects/client.php';
 require_once API_ROOT . '/src/objects/product.php';
 
 // Error reporting
+ini_set('display_errors', 0);
 if (!API_PROD) {
     ini_set('display_errors', 1);
     error_reporting(E_ALL);

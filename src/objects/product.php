@@ -41,30 +41,31 @@ class Product {
         // Update all products, or one if empty payload
         // recommended to run only once a day
         if (empty($this->payload)) {
+            $exec = 'Error receiving products.';
             $products = $this->webhook->call('Product_GetAll');
-            if (!empty($products))
+            if (is_array($products) && !empty($products))
                 foreach ($products as $product)
-                    $execute = $this->execute($product);
+                    $exec = $this->execProduct($product);
         } else {
-            $execute = $this->execute($this->payload);
+            $exec = $this->execProduct($this->payload);
         }
 
         // Return
-        return $execute;
+        return $exec;
     }
 
     /**
      * @return array|mixed|string
      */
-    public function execute ($payload) {
+    public function execProduct ($payload) {
 
         // Check exist client
         // if there is no ID, but there is SKU, it will search for products to identify the ID
         $product = [];
         if (!isset($payload['id']) && isset($payload['sku']))
-            $product = $this->getCache('products', 'sku', $payload['sku']);
+            $product = $this->getProductsCache('products', 'sku', $payload['sku']);
         elseif (isset($this->payload['id']))
-            $product = $this->getCache('products', 'id' , $payload['id']);
+            $product = $this->getProductsCache('products', 'id' , $payload['id']);
 
         // Correct data
         $data = $this->data($payload);
@@ -85,7 +86,7 @@ class Product {
      * @param array $data
      * @return array
      */
-    private function data ($data = []) : array {
+    private function data (array $data = []) : array {
 
         // Attributes
         $attributes = $data['atributes'][0] ?? null;
@@ -96,7 +97,7 @@ class Product {
 
         // Category
         if (!empty($categoryName)) {
-            $category = $this->getCache('products/categories', 'name', $categoryName);
+            $category = $this->getProductsCache('products/categories', 'name', $categoryName);
             if (empty($category)) {
                 $category = $this->rest->call('products/categories', ['name' => $categoryName]);
                 if (empty($subcategoryName)) $this->api->cacheUpdate('products/categories', $category);
@@ -106,7 +107,7 @@ class Product {
 
         // Subcategory
         if (!empty($subcategoryName)) {
-            $subcategory = $this->getCache('products/categories', 'name', $subcategoryName);
+            $subcategory = $this->getProductsCache('products/categories', 'name', $subcategoryName);
             if (empty($subcategory)) {
                 $subcategory = $this->rest->call('products/categories', [
                     'name' => $subcategoryName,
@@ -119,7 +120,7 @@ class Product {
 
         // Brand
         if (!empty($brandName)) {
-            $brand = $this->getCache('products/attributes', 'name', 'Marca');
+            $brand = $this->getProductsCache('products/attributes', 'name', 'Marca');
             if (empty($brand)) {
                 $brand = $this->rest->call('products/attributes', ['name' => 'Marca']);
                 $this->api->cacheUpdate('products/attributes', $brand);
@@ -135,7 +136,7 @@ class Product {
 
         // Group
         if (!empty($groupName)) {
-            $group = $this->getCache('products/attributes', 'name', 'Grupo');
+            $group = $this->getProductsCache('products/attributes', 'name', 'Grupo');
             if (empty($group)) {
                 $group = $this->rest->call('products/attributes', ['name' => 'Grupo']);
                 $this->api->cacheUpdate('products/attributes', $group);
@@ -167,9 +168,9 @@ class Product {
      * @param $value
      * @return array
      */
-    private function getCache ($type, $key, $value) {
+    private function getProductsCache ($type, $key, $value) {
         $cache = $this->api->cache($type);
-        $cache = empty($cache) ? $this->getInfos($type) : json_decode($cache, true);
+        $cache = empty($cache) ? $this->getProductsInfos($type) : json_decode($cache, true);
 
         // Search info
         if (!empty($cache)) {
@@ -185,7 +186,7 @@ class Product {
      * Get all products
      * @return array|mixed
      */
-    private function getInfos ($type) : array {
+    private function getProductsInfos ($type) : array {
 
         // Cache
         $cache = $this->api->cache($type);

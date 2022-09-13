@@ -33,7 +33,6 @@ try {
     // App run
     $app = new Api\App($action, $headers, (!empty($payload) ? $payload : []));
     $app->run();
-
 } catch (Exception $e) {
     $api->logger($e->getMessage(), 'Exception');
 }

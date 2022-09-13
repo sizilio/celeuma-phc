@@ -95,7 +95,7 @@ class Webhook {
      * @return array|string
      * @throws Exception
      */
-    private function callReturn (string $response): array {
+    private function callReturn (string $response) {
         $return = [];
         $response = preg_replace("/(<\/?)(\w+):([^>]*>)/", "$1$2$3", $response);
         $xml = new SimpleXMLElement($response);
@@ -103,7 +103,7 @@ class Webhook {
         $body = json_decode(json_encode($body), true);
 
         if (isset($body['RunCodeResponse']['RunCodeResult'])) {
-            $json = json_decode($body['RunCodeResponse']['RunCodeResult'], true);
+            $json = @json_decode($body['RunCodeResponse']['RunCodeResult'], true);
             if (!empty($json)) $return = $json;
             else $return = $body['RunCodeResponse']['RunCodeResult'];
         }
